@@ -33,39 +33,56 @@ function generatePlace (place, target) {
   target.appendChild(article);
 }
 
+function checkBoxesHandler (data, idArray, nameArray, title, length) {
+  if (data.checked) {
+    idArray.push(data.dataset.id);
+    nameArray.push(data.dataset.name);
+  } else {
+    const index = idArray.indexOf(data.dataset.id);
+    if (index !== -1) idArray.splice(index, 1);
+
+    const index2 = nameArray.indexOf(data.dataset.name);
+    if (index2 !== -1) nameArray.splice(index2, 1);
+  }
+
+  let names = nameArray.toString().replaceAll(',', ', ');
+
+  if (names.length > length) {
+    names = names.substring(0, length) + '...';
+  } else if (names.length === 0) {
+    names = '&nbsp;';
+  }
+
+  title.innerHTML = names;
+}
+
 document.addEventListener('DOMContentLoaded', () => {
   const checkedBoxes = [];
   const amenitiesNames = [];
+  const statesChecked = [];
+  const statesNames = [];
+  const citiesChecked = [];
+  const citiesNames = [];
 
   const checkBoxes = document.querySelectorAll('.amenities input[type="checkbox"]');
   const amenitiesTitle = document.querySelector('.amenities h4');
+  const statesBoxes = document.querySelectorAll('.state');
+  const statesTitle = document.querySelector('.locations h4');
+  const citiesBoxes = document.querySelectorAll('.city');
   const apiStatus = document.getElementById('api_status');
   const places = document.querySelector('.places');
   const button = document.querySelector('button');
 
+  statesBoxes.forEach(state => {
+    state.addEventListener('change', () => checkBoxesHandler(state, statesChecked, statesNames, statesTitle, 28));
+  });
+
+  citiesBoxes.forEach(city => {
+    city.addEventListener('change', () => checkBoxesHandler(city, citiesChecked, citiesNames, statesTitle, 28));
+  });
+
   checkBoxes.forEach((amenity) => {
-    amenity.addEventListener('change', () => {
-      if (amenity.checked) {
-        checkedBoxes.push(amenity.dataset.id);
-        amenitiesNames.push(amenity.dataset.name);
-      } else {
-        const index = checkedBoxes.indexOf(amenity.dataset.id);
-        if (index !== -1) checkedBoxes.splice(index, 1);
-
-        const index2 = amenitiesNames.indexOf(amenity.dataset.name);
-        if (index2 !== -1) amenitiesNames.splice(index2, 1);
-      }
-
-      let amenities = amenitiesNames.toString().replaceAll(',', ', ');
-
-      if (amenities.length > 28) {
-        amenities = amenities.substring(0, 28) + '...';
-      } else if (amenities.length === 0) {
-        amenities = '&nbsp;';
-      }
-
-      amenitiesTitle.innerHTML = amenities;
-    });
+    amenity.addEventListener('change', () => checkBoxesHandler(amenity, checkedBoxes, amenitiesNames, amenitiesTitle, 28));
   });
 
   button.addEventListener('click', () => {
@@ -74,7 +91,7 @@ document.addEventListener('DOMContentLoaded', () => {
       headers: {
         'Content-Type': 'application/json'
       },
-      body: JSON.stringify({ amenities: checkedBoxes })
+      body: JSON.stringify({ states: statesChecked, cities: citiesChecked, amenities: checkedBoxes })
     })
       .then(res => res.json())
       .then(data => {
